@@ -1,0 +1,19 @@
+
+State Machine - |finalproject|keypad_buf
+Name keypad_buf.1111 keypad_buf.1110 keypad_buf.1101 keypad_buf.1100 keypad_buf.1011 keypad_buf.1010 keypad_buf.1001 keypad_buf.1000 keypad_buf.0111 keypad_buf.0110 keypad_buf.0101 keypad_buf.0100 keypad_buf.0011 keypad_buf.0010 keypad_buf.0001 keypad_buf.0000 
+keypad_buf.0000 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+keypad_buf.0001 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 
+keypad_buf.0010 0 0 0 0 0 0 0 0 0 0 0 0 0 1 0 1 
+keypad_buf.0011 0 0 0 0 0 0 0 0 0 0 0 0 1 0 0 1 
+keypad_buf.0100 0 0 0 0 0 0 0 0 0 0 0 1 0 0 0 1 
+keypad_buf.0101 0 0 0 0 0 0 0 0 0 0 1 0 0 0 0 1 
+keypad_buf.0110 0 0 0 0 0 0 0 0 0 1 0 0 0 0 0 1 
+keypad_buf.0111 0 0 0 0 0 0 0 0 1 0 0 0 0 0 0 1 
+keypad_buf.1000 0 0 0 0 0 0 0 1 0 0 0 0 0 0 0 1 
+keypad_buf.1001 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 
+keypad_buf.1010 0 0 0 0 0 1 0 0 0 0 0 0 0 0 0 1 
+keypad_buf.1011 0 0 0 0 1 0 0 0 0 0 0 0 0 0 0 1 
+keypad_buf.1100 0 0 0 1 0 0 0 0 0 0 0 0 0 0 0 1 
+keypad_buf.1101 0 0 1 0 0 0 0 0 0 0 0 0 0 0 0 1 
+keypad_buf.1110 0 1 0 0 0 0 0 0 0 0 0 0 0 0 0 1 
+keypad_buf.1111 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 
