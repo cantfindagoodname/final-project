@@ -44,6 +44,58 @@
 					"strict" : false
 				},
 				{
+					"name" : "dot_col[2]",
+					"strict" : false
+				},
+				{
+					"name" : "dot_col[3]",
+					"strict" : false
+				},
+				{
+					"name" : "dot_col[4]",
+					"strict" : false
+				},
+				{
+					"name" : "dot_col[5]",
+					"strict" : false
+				},
+				{
+					"name" : "dot_col[6]",
+					"strict" : false
+				},
+				{
+					"name" : "dot_col[7]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[0]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[1]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[2]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[3]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[4]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[5]",
+					"strict" : false
+				},
+				{
+					"name" : "seven_seg[6]",
+					"strict" : false
+				},
+				{
 					"name" : "rst",
 					"strict" : false
 				},

@@ -9,91 +9,36 @@ module finalproject(clk,rst,keypad_row,keypad_col,dot_row,dot_col,seven_seg);
 	reg [7:0] dot_col_buf[0:7];
 	reg [3:0] keypad_buf;
 	reg [2:0] row_count;
-	reg clk_div,clk_dot;
+	wire clk_div, clk_dot, clk_spn; // assign dot matrix column, scan dot matrix row, turn on dot matrix, respectively
 	
-	integer it, it2;
-	reg [31:0] delayCount[15:0];
+	clk_divide div(.clk(clk), .rst(rst), .div_clk(clk_div), .frequency(32'd250000));
+	clk_divide dot(.clk(clk), .rst(rst), .div_clk(clk_dot), .frequency(32'd5000));
+	clk_divide spn(.clk(clk), .rst(rst), .div_clk(clk_spn), .frequency(32'd25000000));
 	
-	reg [15:0] moleUp;
+	/***********************************************************/
+	// lfsr ( pseudo-random sequence generator )
 	
-	integer rnd_int;
-	reg [31:0] cnt_spawn;
-	
-	reg [7:0] cnt_rnd;
-	
-	
-	// clock divider
-	always@(posedge clk)
-	begin
-		if (~rst) begin
-			cnt_div <= 32'b0;
-			cnt_dot <= 32'b0;
-			clk_div <= 1'b0;
-			clk_dot <= 1'b0;
-			
-			cnt_spawn <= 32'b0;
+	reg [7:0] rnd_seq;
+	reg [7:0] rnd_num;
 
-			for(it=0;it<16;it=it+1)begin
-				delayCount[it] <= 16'b0;
-				moleUp[it] <= 16'b0;
-			end
-			
-		end
-		else begin
-		
-			if(cnt_div == 32'd250000)begin
-				cnt_div <= 32'd0;
-				clk_div <= ~clk_div;
-			end
-			else begin
-				cnt_div <= cnt_div + 32'd1;
-			end
-			
-			if(cnt_dot == 32'd5000)begin
-				cnt_dot <= 32'd0;
-				clk_dot <= ~clk_dot;
-			end
-			else begin
-				cnt_dot <= cnt_dot + 32'd1;
-			end
-			
-			if(cnt_rnd == 8'b11111111) begin
-				cnt_rnd <= 8'd0;
-			end
-			else begin
-				cnt_rnd <= cnt_rnd  + 8'd1;
-			end
-			
-			if(cnt_spawn == 32'd12500000) begin
-				cnt_spawn <= 32'd0;
-				
-				rnd_int = cnt_rnd[6:2];
-				rnd_int = (rnd_int * rnd_int) % 16;
-				moleUp[rnd_int] <= 1;
+	always @(rnd_seq) begin
+		rnd_num = (rnd_seq[6:3] * rnd_seq[4:1]);
+		rnd_num[3:0] = {rnd_seq[7], rnd_num[3], rnd_num[5], rnd_seq[0]};
+	end
 
-			end
-			else begin
-				cnt_spawn <= cnt_spawn + 32'd1;
-			end
-			
-			for(it=0;it<16;it=it+1) begin
-				if(moleUp[it]) begin
-					if(delayCount[it] == 32'd25000000) begin
-						delayCount[it] <= 32'd0;
-						moleUp[it] <= 1'd0;
-					end
-					else begin
-						delayCount[it] <= delayCount[it] + 32'd1;
-					end
-				end
-				else begin
-					delayCount[it] <= 32'd0;
-				end
-			end		
-		end
+	always @(posedge clk_spn or negedge rst) begin		
+	if (~rst)
+		rnd_seq <= 8'd1; 
+	else
+		rnd_seq <= {rnd_seq[6:0], rnd_seq[7] ^ rnd_seq[5] ^ rnd_seq[4] ^ rnd_seq[3]};
 	end
 	
+	/**********************************************************/
+	
+	/**********************************************************/
 	// scan row
+	integer it;
+	
 	always@ (posedge clk_dot or negedge rst)
 	begin
 		if (~rst)
@@ -118,9 +63,14 @@ module finalproject(clk,rst,keypad_row,keypad_col,dot_row,dot_col,seven_seg);
 			endcase
 		end
 	end
+	/**********************************************************/
 	
+	/**********************************************************/
+	// assign column
 	
-	// keypad buffer
+	reg [15:0] signal;
+	reg [31:0] count [15:0];
+		
 	always@(posedge clk_div or negedge rst)
 	begin
 		if (~rst)
@@ -135,208 +85,191 @@ module finalproject(clk,rst,keypad_row,keypad_col,dot_row,dot_col,seven_seg);
 			dot_col_buf[7] <= 8'd0;
 		end
 		else
-
-		for(it=0;it<16;it=it+1)begin
-			if(moleUp[it])begin
-				case(it)
-					0:begin
-						dot_col_buf[0]<=8'b11000000|dot_col_buf[0];
-						dot_col_buf[1]<=8'b11000000|dot_col_buf[1];
-					end
-					1:begin
-						dot_col_buf[0]<=8'b00110000|dot_col_buf[0];
-						dot_col_buf[1]<=8'b00110000|dot_col_buf[1];
-					end
-					2:begin
-						dot_col_buf[0]<=8'b00001100|dot_col_buf[0];
-						dot_col_buf[1]<=8'b00001100|dot_col_buf[1];
-					end
-					3:begin
-						dot_col_buf[0]<=8'b00000011|dot_col_buf[0];
-						dot_col_buf[1]<=8'b00000011|dot_col_buf[1];
-					end
-					4:begin
-						dot_col_buf[2]<=8'b11000000|dot_col_buf[2];
-						dot_col_buf[3]<=8'b11000000|dot_col_buf[3];
-					end
-					5:begin
-						dot_col_buf[2]<=8'b00110000|dot_col_buf[2];
-						dot_col_buf[3]<=8'b00110000|dot_col_buf[3];
-					end
-					6:begin
-						dot_col_buf[2]<=8'b00001100|dot_col_buf[2];
-						dot_col_buf[3]<=8'b00001100|dot_col_buf[3];
-					end
-					7:begin
-						dot_col_buf[2]<=8'b00000011|dot_col_buf[2];
-						dot_col_buf[3]<=8'b00000011|dot_col_buf[3];
-					end
-					8:begin
-						dot_col_buf[4]<=8'b11000000|dot_col_buf[4];
-						dot_col_buf[5]<=8'b11000000|dot_col_buf[5];
-					end
-					9:begin
-						dot_col_buf[4]<=8'b00110000|dot_col_buf[4];
-						dot_col_buf[5]<=8'b00110000|dot_col_buf[5];
-					end
-					10:begin
-						dot_col_buf[4]<=8'b00001100|dot_col_buf[4];
-						dot_col_buf[5]<=8'b00001100|dot_col_buf[5];
-					end
-					11:begin
-						dot_col_buf[4]<=8'b00000011|dot_col_buf[4];
-						dot_col_buf[5]<=8'b00000011|dot_col_buf[5];
-					end
-					12:begin
-						dot_col_buf[6]<=8'b11000000|dot_col_buf[6];
-						dot_col_buf[7]<=8'b11000000|dot_col_buf[7];
-					end
-					13:begin
-						dot_col_buf[6]<=8'b00110000|dot_col_buf[6];
-						dot_col_buf[7]<=8'b00110000|dot_col_buf[7];
-					end
-					14:begin
-						dot_col_buf[6]<=8'b00001100|dot_col_buf[6];
-						dot_col_buf[7]<=8'b00001100|dot_col_buf[7];
-					end
-					15:begin
-						dot_col_buf[6]<=8'b00000011|dot_col_buf[6];
-						dot_col_buf[7]<=8'b00000011|dot_col_buf[7];
-					end
-				endcase
-			end
-			else begin
-				case(it)
-					0:begin
-						dot_col_buf[0]<=8'b00111111&dot_col_buf[0];
-						dot_col_buf[1]<=8'b00111111&dot_col_buf[1];
-					end
-					1:begin
-						dot_col_buf[0]<=8'b11001111&dot_col_buf[0];
-						dot_col_buf[1]<=8'b11001111&dot_col_buf[1];
-					end
-					2:begin
-						dot_col_buf[0]<=8'b11110011&dot_col_buf[0];
-						dot_col_buf[1]<=8'b11110011&dot_col_buf[1];
-					end
-					3:begin
-						dot_col_buf[0]<=8'b11111100&dot_col_buf[0];
-						dot_col_buf[1]<=8'b11111100&dot_col_buf[1];
-					end
-					4:begin
-						dot_col_buf[2]<=8'b00111111&dot_col_buf[2];
-						dot_col_buf[3]<=8'b00111111&dot_col_buf[3];
-					end
-					5:begin
-						dot_col_buf[2]<=8'b11001111&dot_col_buf[2];
-						dot_col_buf[3]<=8'b11001111&dot_col_buf[3];
-					end
-					6:begin
-						dot_col_buf[2]<=8'b11110011&dot_col_buf[2];
-						dot_col_buf[3]<=8'b11110011&dot_col_buf[3];
-					end
-					7:begin
-						dot_col_buf[2]<=8'b11111100&dot_col_buf[2];
-						dot_col_buf[3]<=8'b11111100&dot_col_buf[3];
-					end
-					8:begin
-						dot_col_buf[4]<=8'b00111111&dot_col_buf[4];
-						dot_col_buf[5]<=8'b00111111&dot_col_buf[5];
-					end
-					9:begin
-						dot_col_buf[4]<=8'b11001111&dot_col_buf[4];
-						dot_col_buf[5]<=8'b11001111&dot_col_buf[5];
-					end
-					10:begin
-						dot_col_buf[4]<=8'b11110011&dot_col_buf[4];
-						dot_col_buf[5]<=8'b11110011&dot_col_buf[5];
-					end
-					11:begin
-						dot_col_buf[4]<=8'b11111100&dot_col_buf[4];
-						dot_col_buf[5]<=8'b11111100&dot_col_buf[5];
-					end
-					12:begin
-						dot_col_buf[6]<=8'b00111111&dot_col_buf[6];
-						dot_col_buf[7]<=8'b00111111&dot_col_buf[7];
-					end
-					13:begin
-						dot_col_buf[6]<=8'b11001111&dot_col_buf[6];
-						dot_col_buf[7]<=8'b11001111&dot_col_buf[7];
-					end
-					14:begin
-						dot_col_buf[6]<=8'b11110011&dot_col_buf[6];
-						dot_col_buf[7]<=8'b11110011&dot_col_buf[7];
-					end
-					15:begin
-						dot_col_buf[6]<=8'b11111100&dot_col_buf[6];
-						dot_col_buf[7]<=8'b11111100&dot_col_buf[7];
-					end
-				endcase
-			end
-		end
-		
 		begin
-			case({keypad_row, keypad_col})
-				8'b01110111:begin
-					keypad_buf <= 4'hf;
+			case(rnd_num[5:2])
+				4'hf:begin
+					signal[0]<=1'b1;
+					dot_col_buf[0]<=8'b11000000|dot_col_buf[0];
+					dot_col_buf[1]<=8'b11000000|dot_col_buf[1];
 				end
-				8'b01111011:begin
-					keypad_buf <= 4'he;
+				4'he:begin
+					signal[1]<=1'b1;
+					dot_col_buf[0]<=8'b00110000|dot_col_buf[0];
+					dot_col_buf[1]<=8'b00110000|dot_col_buf[1];
 				end
-				8'b01111101:begin
-					keypad_buf <= 4'hd;
+				4'hd:begin
+					signal[2]<=1'b1;
+					dot_col_buf[0]<=8'b00001100|dot_col_buf[0];
+					dot_col_buf[1]<=8'b00001100|dot_col_buf[1];
 				end
-				8'b01111110:begin
-					keypad_buf <= 4'hc;
+				4'hc:begin
+					signal[3]<=1'b1;
+					dot_col_buf[0]<=8'b00000011|dot_col_buf[0];
+					dot_col_buf[1]<=8'b00000011|dot_col_buf[1];
 				end
-				8'b10110111:begin
-					keypad_buf <= 4'hb;
+				4'hb:begin
+					signal[4]<=1'b1;
+					dot_col_buf[2]<=8'b11000000|dot_col_buf[2];
+					dot_col_buf[3]<=8'b11000000|dot_col_buf[3];
 				end
-				8'b10111011:begin
-					keypad_buf <= 4'h3;
+				4'h3:begin
+					signal[5]<=1'b1;
+					dot_col_buf[2]<=8'b00110000|dot_col_buf[2];
+					dot_col_buf[3]<=8'b00110000|dot_col_buf[3];
 				end
-				8'b10111101:begin
-					keypad_buf <= 4'h6;
+				4'h6:begin
+					signal[6]<=1'b1;
+					dot_col_buf[2]<=8'b00001100|dot_col_buf[2];
+					dot_col_buf[3]<=8'b00001100|dot_col_buf[3];
 				end
-				8'b10111110:begin
-					keypad_buf <= 4'h9;
+				4'h9:begin
+					signal[7]<=1'b1;
+					dot_col_buf[2]<=8'b00000011|dot_col_buf[2];
+					dot_col_buf[3]<=8'b00000011|dot_col_buf[3];
 				end
-				8'b11010111:begin
-					keypad_buf <= 4'ha;
+				4'ha:begin
+					signal[8]<=1'b1;
+					dot_col_buf[4]<=8'b11000000|dot_col_buf[4];
+					dot_col_buf[5]<=8'b11000000|dot_col_buf[5];
 				end
-				8'b11011011:begin
-					keypad_buf <= 4'h2;
+				4'h2:begin
+					signal[9]<=1'b1;
+					dot_col_buf[4]<=8'b00110000|dot_col_buf[4];
+					dot_col_buf[5]<=8'b00110000|dot_col_buf[5];
 				end
-				8'b11011101:begin
-					keypad_buf <= 4'h5;
+				4'h5:begin
+					signal[10]<=1'b1;
+					dot_col_buf[4]<=8'b00001100|dot_col_buf[4];
+					dot_col_buf[5]<=8'b00001100|dot_col_buf[5];
 				end
-				8'b11011110:begin
-					keypad_buf <= 4'h8;
+				4'h8:begin
+					signal[11]<=1'b1;
+					dot_col_buf[4]<=8'b00000011|dot_col_buf[4];
+					dot_col_buf[5]<=8'b00000011|dot_col_buf[5];
 				end
-				8'b11100111:begin
-					keypad_buf <= 4'h0;
+				4'h0:begin
+					signal[12]<=1'b1;
+					dot_col_buf[6]<=8'b11000000|dot_col_buf[6];
+					dot_col_buf[7]<=8'b11000000|dot_col_buf[7];
 				end
-				8'b11101011:begin
-					keypad_buf <= 4'h1;
+				4'h1:begin
+					signal[13]<=1'b1;
+					dot_col_buf[6]<=8'b00110000|dot_col_buf[6];
+					dot_col_buf[7]<=8'b00110000|dot_col_buf[7];
 				end
-				8'b11101101:begin
-					keypad_buf <= 4'h4;
+				4'h4:begin
+					signal[14]<=1'b1;
+					dot_col_buf[6]<=8'b00001100|dot_col_buf[6];
+					dot_col_buf[7]<=8'b00001100|dot_col_buf[7];
 				end
-				8'b11101110:begin
-					keypad_buf <= 4'h7;
+				4'h7:begin
+					signal[15]<=1'b1;
+					dot_col_buf[6]<=8'b00000011|dot_col_buf[6];
+					dot_col_buf[7]<=8'b00000011|dot_col_buf[7];
 				end
-				default:
-					keypad_buf<=keypad_buf;
 			endcase
+			for(it=0;it<16;it=it+1) begin
+				if(signal[it]==1'b1) begin
+				   // clock divider for stay time
+					if(count[it]==32'd500) begin
+						count[it]<=32'd0;
+						case(it)
+							0:begin
+								signal[0]<=1'b0;
+								dot_col_buf[0]<=8'b00111111&dot_col_buf[0];
+								dot_col_buf[1]<=8'b00111111&dot_col_buf[1];
+							end
+							1:begin
+								signal[1]<=1'b0;
+								dot_col_buf[0]<=8'b11001111&dot_col_buf[0];
+								dot_col_buf[1]<=8'b11001111&dot_col_buf[1];
+							end
+							2:begin
+								signal[2]<=1'b0;
+								dot_col_buf[0]<=8'b11110011&dot_col_buf[0];
+								dot_col_buf[1]<=8'b11110011&dot_col_buf[1];
+							end
+							3:begin
+								signal[3]<=1'b0;
+								dot_col_buf[0]<=8'b11111100&dot_col_buf[0];
+								dot_col_buf[1]<=8'b11111100&dot_col_buf[1];
+							end
+							4:begin
+								signal[4]<=1'b0;
+								dot_col_buf[2]<=8'b00111111&dot_col_buf[2];
+								dot_col_buf[3]<=8'b00111111&dot_col_buf[3];
+							end
+							5:begin
+								signal[5]<=1'b0;
+								dot_col_buf[2]<=8'b11001111&dot_col_buf[2];
+								dot_col_buf[3]<=8'b11001111&dot_col_buf[3];
+							end
+							6:begin
+								signal[6]<=1'b0;
+								dot_col_buf[2]<=8'b11110011&dot_col_buf[2];
+								dot_col_buf[3]<=8'b11110011&dot_col_buf[3];
+							end
+							7:begin
+								signal[7]<=1'b0;
+								dot_col_buf[2]<=8'b11111100&dot_col_buf[2];
+								dot_col_buf[3]<=8'b11111100&dot_col_buf[3];
+							end
+							8:begin
+								signal[8]<=1'b0;
+								dot_col_buf[4]<=8'b00111111&dot_col_buf[4];
+								dot_col_buf[5]<=8'b00111111&dot_col_buf[5];
+							end
+							9:begin
+								signal[9]<=1'b0;
+								dot_col_buf[4]<=8'b11001111&dot_col_buf[4];
+								dot_col_buf[5]<=8'b11001111&dot_col_buf[5];
+							end
+							10:begin
+								signal[10]<=1'b0;
+								dot_col_buf[4]<=8'b11110011&dot_col_buf[4];
+								dot_col_buf[5]<=8'b11110011&dot_col_buf[5];
+							end
+							11:begin
+								signal[11]<=1'b0;
+								dot_col_buf[4]<=8'b11111100&dot_col_buf[4];
+								dot_col_buf[5]<=8'b11111100&dot_col_buf[5];
+							end
+							12:begin
+								signal[12]<=1'b0;
+								dot_col_buf[6]<=8'b00111111&dot_col_buf[6];
+								dot_col_buf[7]<=8'b00111111&dot_col_buf[7];
+							end
+							13:begin
+								signal[13]<=1'b0;
+								dot_col_buf[6]<=8'b11001111&dot_col_buf[6];
+								dot_col_buf[7]<=8'b11001111&dot_col_buf[7];
+							end
+							14:begin
+								signal[14]<=1'b0;
+								dot_col_buf[6]<=8'b11110011&dot_col_buf[6];
+								dot_col_buf[7]<=8'b11110011&dot_col_buf[7];
+							end
+							15:begin
+								signal[15]<=1'b0;
+								dot_col_buf[6]<=8'b11111100&dot_col_buf[6];
+								dot_col_buf[7]<=8'b11111100&dot_col_buf[7];
+							end
+						endcase
+					end	
+					else begin
+						count[it] <= count[it] + 32'd1;
+					end
+				end
+				else begin end
+			end
 		end
-		
 	end
+	/**********************************************************/
+	// bcd display
 	
-
-	// seven segment display
 	always@(*)
 	begin
-		case(keypad_buf)
+		case(rnd_num[5:2])
 		4'h0:seven_seg = 7'b1000000;
 		4'h1:seven_seg = 7'b1111001;
 		4'h2:seven_seg = 7'b0100100;
@@ -357,3 +290,35 @@ module finalproject(clk,rst,keypad_row,keypad_col,dot_row,dot_col,seven_seg);
 	end
 
 endmodule
+
+module clk_divide(clk, rst, div_clk, frequency);
+input clk, rst;
+input [31:0] frequency;
+output div_clk;
+
+reg div_clk;
+reg [31:0] count;
+
+always@(posedge clk)
+begin
+	if(!rst)
+	begin
+		count <= 32'd0;
+		div_clk <= 1'b0;
+	end
+	else
+	begin
+		if(count==frequency)
+		begin
+			count <= 32'd0;
+			div_clk <= ~div_clk;
+		end
+		else
+		begin
+			count <= count + 32'd1;
+		end
+	end
+end
+endmodule
+
+	
